@@ -21,6 +21,10 @@ impl Default for Runtime {
 }
 
 pub(crate) fn enable(app: &mut SlideApp) {
+    // Zenda's build is updated by Work from its own manifest, never from upstream's feed.
+    if crate::zenda::ON {
+        return;
+    }
     app.updates_rt.enabled = true;
 }
 
