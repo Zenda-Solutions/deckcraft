@@ -117,6 +117,7 @@ impl SlideApp {
 
     pub fn with_control(mut self, rx: Receiver<ControlRequest>) -> Self {
         self.control_rx = Some(rx);
+        self.zenda.channel = true;
         self
     }
 

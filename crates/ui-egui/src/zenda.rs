@@ -16,6 +16,9 @@ const OUTBOX_MAX: usize = 32;
 pub struct Outbox {
     events: Vec<Value>,
     seq: u64,
+    /// Started with `--control`: Work drains this outbox. (`control_rx` is taken while a request
+    /// runs, so it cannot tell.)
+    pub channel: bool,
 }
 
 impl Outbox {
@@ -62,7 +65,7 @@ pub fn share_params(app: &crate::SlideApp) -> Value {
 /// come forward. Returns what the caller reports (`{"work": "theo"}`).
 pub fn reach_work(app: &mut crate::SlideApp, event: &str, params: Value) -> Value {
     let kind = event.trim_start_matches("work.");
-    if app.control_rx.is_some() || !cfg!(not(target_arch = "wasm32")) {
+    if app.zenda.channel || app.control_rx.is_some() || !cfg!(not(target_arch = "wasm32")) {
         app.zenda.push(event, params);
         return json!({"work": kind, "via": "channel"});
     }
