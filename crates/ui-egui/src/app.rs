@@ -35,6 +35,7 @@ impl SlideApp {
     pub fn new(session: Session, mut services: Services) -> Self {
         let audio_out = services.audio_out.take();
         SlideApp {
+            zenda: Default::default(),
             last_fill: serde_json::json!("accent1"),
             last_outline: serde_json::json!("tx1"),
             table_pen: serde_json::json!({"width": 1.0}),

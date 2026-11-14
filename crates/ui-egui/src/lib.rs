@@ -11,6 +11,7 @@ pub mod canvas;
 pub mod capture;
 pub mod control;
 pub mod dialogs;
+pub mod i18n;
 pub mod doc_window;
 pub mod eyedropper;
 pub mod icons;
@@ -27,6 +28,7 @@ pub mod theme;
 pub mod toast;
 pub mod uifonts;
 pub mod widgets;
+pub mod zenda;
 
 use std::collections::HashMap;
 use std::sync::mpsc::Receiver;
@@ -199,6 +201,8 @@ struct InputTarget {
 }
 
 pub struct SlideApp {
+    /// Events for Work (`work.events`); empty unless built with the `zenda` feature.
+    pub zenda: zenda::Outbox,
     /// Shape Fill's last colour (a command colour parameter): the button applies it again. Accent 1 until one is picked.
     pub last_fill: serde_json::Value,
     /// Shape Outline's last colour, likewise. Text 1 until one is picked.

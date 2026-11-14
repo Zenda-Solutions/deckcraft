@@ -37,7 +37,7 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         // Dragging the empty title bar moves the window.
         let drag = ui.interact(rect, ui.scope_id().with("titledrag"), Sense::click_and_drag());
         // The drag surface is not a button: a full-width Button would be announced as one.
-        drag.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Window, true, "Window title bar"));
+        drag.widget_info(|| egui::WidgetInfo::labeled(egui::Role::Window, true, crate::i18n::tr("Window title bar")));
         if drag.drag_started() {
             ui.ctx().send_viewport_cmd(egui::ViewportCommand::StartDrag);
         }
@@ -54,21 +54,32 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         let has_doc = app.session.active().is_some();
         let dirty = app.session.active().is_some_and(|d| d.is_dirty());
         crate::qat::show(app, &mut child);
-        let title =
-            app.session.active().map(|d| format!("{}{}", d.title(), if dirty { " — Edited" } else { "" })).unwrap_or_else(|| "DeckCraft".into());
+        let edited = if dirty { format!(" — {}", crate::i18n::tr("Edited")) } else { String::new() };
+        let title = app.session.active().map(|d| format!("{}{edited}", d.title())).unwrap_or_else(|| "DeckCraft".into());
         ui.painter().text(rect.center(), Align2::CENTER_CENTER, title, theme::font(13.0), t.text);
         // Right side.
         let mut right = ui.new_child(
             egui::UiBuilder::new()
-                .max_rect(Rect::from_min_max(pos2(rect.max.x - 320.0, rect.min.y), pos2(rect.max.x - 10.0, rect.max.y)))
+                .max_rect(Rect::from_min_max(pos2(rect.max.x - if crate::zenda::ON { 480.0 } else { 320.0 }, rect.min.y), pos2(rect.max.x - 10.0, rect.max.y)))
                 .layout(egui::Layout::right_to_left(egui::Align::Center)),
         );
         right.spacing_mut().item_spacing.x = 6.0;
         if icon_toggle(&mut right, Icon::Search, "Search commands (⇧⌘P)", true, false).clicked() {
             app.palette = Some((String::new(), 0));
         }
+        #[cfg(feature = "zenda")]
+        {
+            if crate::zenda::theo_button(&mut right, crate::i18n::tr("Ask Theo for help"), crate::i18n::tr("Ask Theo about what is on screen")).clicked() {
+                let context = crate::zenda::theo_context(app);
+                crate::zenda::reach_work(app, "work.theo", context);
+            }
+            let share = right.add_enabled(has_doc, egui::Button::new(crate::i18n::tr("Share")).corner_radius(control_h / 2.0).min_size(vec2(0.0, control_h)));
+            if share.on_hover_text(crate::i18n::tr("Send this presentation with Work")).clicked() {
+                let _ = app.run("file.share", json!({}));
+            }
+        }
         let share = right.add(
-            egui::Button::new(egui::RichText::new("  Present  ").color(t.accent_text).font(theme::bold(13.0)))
+            egui::Button::new(egui::RichText::new(format!("  {}  ", crate::i18n::tr("Present"))).color(t.accent_text).font(theme::bold(13.0)))
                 .fill(t.accent)
                 .corner_radius(control_h / 2.0)
                 .min_size(vec2(84.0, control_h)),

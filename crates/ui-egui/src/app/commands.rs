@@ -18,7 +18,10 @@ impl SlideApp {
     /// Run a command by id (UI commands here, everything else in the engine). Errors show in the
     /// status bar and are returned.
     pub fn run(&mut self, id: &str, params: Value) -> Result<Value, String> {
-        let r = if UI_COMMANDS.iter().any(|c| c.0 == id) {
+        let r = if crate::zenda::ON && id == "file.share" {
+            let params = crate::zenda::share_params(self);
+            Ok(crate::zenda::reach_work(self, "work.share", params))
+        } else if UI_COMMANDS.iter().any(|c| c.0 == id) {
             self.run_ui(id, &params)
         } else {
             self.session.execute(id, &params).map_err(|e| e.to_string())
@@ -211,6 +214,7 @@ impl SlideApp {
                 return Ok(json!({"printed": self.print_pdf(p.clone())}));
             }
             "app.about" => self.dialog = Some(dialogs::Dialog::new("about")),
+            "app.checkUpdates" if crate::zenda::ON => return Err("Work keeps this build up to date".into()),
             "app.checkUpdates" => {
                 #[cfg(not(target_arch = "wasm32"))]
                 updates_ui::request_check(self);

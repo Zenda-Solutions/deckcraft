@@ -8,6 +8,11 @@ description = "DeckCraft egui frontend (PowerPoint-style UI); swappable — noth
 [lints]
 workspace = true
 
+[features]
+default = []
+# Zenda's build for Work: Theo and Share buttons and the `work.events` channel.
+zenda = ["dep:image"]
+
 [dependencies]
 deckcraft-geom = { workspace = true }
 deckcraft-color = { workspace = true }
@@ -24,9 +29,12 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 log = { workspace = true }
 web-time = { workspace = true }
+image = { workspace = true, optional = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 craft-update = { workspace = true }
+# Default interface language (Zenda: es/en/pt); already in the lock through ICU.
+sys-locale = "0.3.2"
 
 [dev-dependencies]
 skrifa = { workspace = true }

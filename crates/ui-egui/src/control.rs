@@ -83,6 +83,10 @@ pub fn all_commands(app: &SlideApp) -> Value {
     for (id, label, sc, params) in crate::UI_COMMANDS {
         v.push(json!({"id": id, "label": label, "shortcut": sc, "params": params, "enabled": true, "ui": true}));
     }
+    if crate::zenda::ON {
+        v.push(json!({"id": "file.share", "label": crate::i18n::tr("Share"), "shortcut": null, "params": "{}", "enabled": true, "ui": true}));
+        v.retain(|c| c["id"] != "app.checkUpdates");
+    }
     Value::Array(v)
 }
 
@@ -144,6 +148,7 @@ pub fn handle(app: &mut SlideApp, ctx: &egui::Context, req: &ControlRequest) -> 
             wrap(app.run(id, params))
         }
         "engine.commands" => ok(all_commands(app)),
+        "work.events" if crate::zenda::ON => ok(json!({"events": app.zenda.drain()})),
         "document.inspect" => wrap(app.run("document.inspect", json!({}))),
         "ui.inspect" => ok(inspect(app, ctx)),
         "ui.pointer" => {
@@ -361,6 +366,14 @@ pub fn handle(app: &mut SlideApp, ctx: &egui::Context, req: &ControlRequest) -> 
         "app.open" => {
             let Some(path) = s("path") else { return err("missing `path`") };
             wrap(app.open_path(path).map(|_| Value::Null))
+        }
+        "app.language.set" => {
+            let Some(language) = s("language").and_then(crate::i18n::Language::parse) else {
+                return err("`language` must be \"en\", \"es\" or \"pt\"");
+            };
+            crate::i18n::set(language);
+            ctx.request_repaint();
+            ok(json!({"language": language.code()}))
         }
         "app.save" => wrap(app.run("file.save", p.clone())),
         "app.export" => wrap(app.run("file.export", p.clone())),

@@ -91,3 +91,9 @@ in craft-fonts, including the LXGW Reserved Font Names and original Klee notice.
 | Family | Author | Source | Licence | Use |
 |---|---|---|---|---|
 | LXGW WenKai Lite Regular 1.530 | LXGW; original Klee Project Authors / Fontworks | https://github.com/lxgw/LxgwWenKai-Lite/tree/b712c83d98acf977bacfb7fb010207802808bda9 | OFL-1.1, unmodified upstream font | Native Chinese glyph fallback after existing UI faces; font SHA256 `f799a538a3355877e597a0ae04050e897932c9ae7689eb9227c2953c5dd549ea`, OFL SHA256 `0333a85fe077b6849f8e417acc44e8bd879442ceb681e271acf93e2d57fd4e2e` |
+
+## Zenda build
+
+| File | Author | Source | Licence | Use |
+|---|---|---|---|---|
+| `assets/zenda/theo-icon-64.png` | Zenda Solutions | Work mascot, supplied by Zenda for its fork | Zenda Solutions, permission to redistribute with this build | Theo button in the `zenda` build; SHA256 `87770f806ab803f236dd03d152cbce7d12058e3ddc91a0de768c96558cbbbeb4` |
