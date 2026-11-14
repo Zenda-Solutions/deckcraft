@@ -266,6 +266,7 @@ fn main() -> eframe::Result {
         options,
         Box::new(move |cc| {
             deckcraft_ui_egui::install_ime_pass_hooks(&cc.egui_ctx);
+            deckcraft_ui_egui::i18n::set(deckcraft_ui_egui::i18n::Language::from_environment());
             let mut app = SlideApp::new(Session::new(), services());
             load_prefs(&mut app);
             app.enable_update_checks();
