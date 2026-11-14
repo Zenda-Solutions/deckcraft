@@ -23,15 +23,43 @@ pub fn about(_app: &mut SlideApp, ui: &mut Ui) {
         ui.label(egui::RichText::new("DeckCraft").font(theme::bold(22.0)));
         ui.label(egui::RichText::new(version_line()).color(t.text_dim));
         ui.add_space(6.0);
-        ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
-        ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
-        ui.add_space(6.0);
-        ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
-        ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
-        ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+        if crate::zenda::ON {
+            // ArtCraft's brand licence lets a modified build say what it is based on, in words,
+            // but not carry the ArtCraft marks or look like an ArtCraft product.
+            ui.label(egui::RichText::new(zenda_line()).strong());
+            ui.label(zenda_based_on());
+            ui.add_space(6.0);
+            ui.hyperlink_to("github.com/Zenda-Solutions/deckcraft", "https://github.com/Zenda-Solutions/deckcraft");
+            ui.hyperlink_to("Source of DeckCraft on GitHub", deckcraft_engine::links::GITHUB);
+        } else {
+            ui.label("Presentations and slide shows, rebuilt from scratch in pure Rust.");
+            ui.label("An open-source, clean-room project. Not affiliated with Microsoft.");
+            ui.add_space(6.0);
+            ui.hyperlink_to("Join our community on Discord", deckcraft_engine::links::DISCORD);
+            ui.hyperlink_to("getartcraft.com/apps/deckcraft", deckcraft_engine::links::APP_PAGE);
+            ui.hyperlink_to("Source on GitHub", deckcraft_engine::links::GITHUB);
+        }
         ui.add_space(6.0);
         ui.label(egui::RichText::new("MIT OR Apache-2.0 · © 2026 ArtCraft Team and the DeckCraft contributors").size(11.0).color(t.text_faint));
     });
+}
+
+/// Who made this build, in the interface language.
+pub fn zenda_line() -> &'static str {
+    match crate::i18n::current() {
+        crate::i18n::Language::Es => "La versión de Zenda para Work",
+        crate::i18n::Language::PtBr => "A versão da Zenda para o Work",
+        crate::i18n::Language::En => "Zenda's build for Work",
+    }
+}
+
+/// The attribution the brand licence allows: based on DeckCraft, by the ArtCraft team.
+pub fn zenda_based_on() -> &'static str {
+    match crate::i18n::current() {
+        crate::i18n::Language::Es => "Basada en DeckCraft, del equipo de ArtCraft. No es un producto de ArtCraft.",
+        crate::i18n::Language::PtBr => "Baseada no DeckCraft, da equipe ArtCraft. Não é um produto da ArtCraft.",
+        crate::i18n::Language::En => "Based on DeckCraft, by the ArtCraft team. Not an ArtCraft product.",
+    }
 }
 
 /// "Version X.Y.Z" plus, for release builds, the short commit and build date. The version comes
