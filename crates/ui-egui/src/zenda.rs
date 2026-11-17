@@ -2,8 +2,18 @@
 //!
 //! While Work drives this copy over the control channel it drains the events with `work.events`.
 //! The copy Work opens for the person to keep editing has no control channel (DeckCraft's channel
-//! has no key, so Work never leaves one open): there the Theo and Share buttons ask Work itself to
-//! come forward, by running the `zwork.exe` Work named in `ZWORK_EXE` with a fixed command.
+//! has no key, so Work never leaves one open): there the Theo and Share buttons run the `zwork.exe`
+//! Work named in `ZWORK_EXE` (an absolute path to a file named `zwork.exe`, or nothing), one
+//! argument per item, never through a shell:
+//!
+//! - Theo: `zwork.exe theo presentaciones <pid> <from>`
+//! - Share: `zwork.exe compartir presentaciones <pid> <dirty 0|1> <name> <path>`
+//!
+//! `<pid>` is this process, so Work can put itself beside this window; `<from>` is a short ASCII
+//! word (`button`); `<name>` (at most 200 characters) and `<path>` are `""` when there is none
+//! (a document never saved has no path). The child is waited for off the UI thread: if it exits
+//! with an error (a Work older than these commands answers «No conozco el comando…»), or cannot
+//! start, `zwork.exe abrir guia` runs instead, so that Work still comes forward.
 use serde_json::{Value, json};
 
 pub const ON: bool = cfg!(feature = "zenda");
@@ -71,11 +81,66 @@ pub fn reach_work(app: &mut crate::SlideApp, event: &str, params: Value) -> Valu
     }
     #[cfg(not(target_arch = "wasm32"))]
     if let Some(exe) = work_exe(std::env::var_os("ZWORK_EXE")) {
-        let started = std::process::Command::new(exe).args(["abrir", "guia"]).spawn().is_ok();
+        let started = ask_work(exe, zwork_args(kind, std::process::id(), &params));
         return json!({"work": kind, "via": "zwork", "ok": started});
     }
     app.zenda.push(event, params);
     json!({"work": kind, "via": "none"})
+}
+
+/// The tool id Work knows this app by.
+#[cfg(not(target_arch = "wasm32"))]
+const TOOL: &str = "presentaciones";
+/// The longest presentation name passed to Work, in characters.
+#[cfg(not(target_arch = "wasm32"))]
+const NAME_MAX: usize = 200;
+/// What an older Work understands: it only comes forward.
+#[cfg(not(target_arch = "wasm32"))]
+const FALLBACK: [&str; 2] = ["abrir", "guia"];
+
+/// `zwork.exe` arguments for `kind` (`theo`, `share`) from this process `pid`, or `None` for an
+/// event Work has no command for.
+#[cfg(not(target_arch = "wasm32"))]
+fn zwork_args(kind: &str, pid: u32, params: &Value) -> Option<Vec<String>> {
+    let text = |key: &str| params.get(key).and_then(Value::as_str).unwrap_or_default();
+    match kind {
+        "theo" => {
+            let from = text("from");
+            let ok = !from.is_empty() && from.len() <= 32 && from.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-' || b == b'_');
+            Some(vec!["theo".into(), TOOL.into(), pid.to_string(), if ok { from } else { "button" }.into()])
+        }
+        "share" => {
+            let dirty = params.get("dirty").and_then(Value::as_bool).unwrap_or(false);
+            let name: String = text("name").chars().filter(|c| !c.is_control()).take(NAME_MAX).collect();
+            Some(vec!["compartir".into(), TOOL.into(), pid.to_string(), if dirty { "1" } else { "0" }.into(), name, text("path").into()])
+        }
+        _ => None,
+    }
+}
+
+/// Whether `zwork.exe abrir guia` must run after the new command: Work answered it with an error,
+/// or the child could not be waited for (`None`) or ended without an exit code.
+#[cfg(not(target_arch = "wasm32"))]
+fn needs_fallback(code: Option<Option<i32>>) -> bool {
+    !matches!(code, Some(Some(0)))
+}
+
+/// Runs `exe args` and, off the UI thread, falls back to `exe abrir guia` when it fails; without
+/// `args`, or when it cannot start, the fallback runs right away. Returns whether something started.
+#[cfg(not(target_arch = "wasm32"))]
+fn ask_work(exe: std::path::PathBuf, args: Option<Vec<String>>) -> bool {
+    let fallback = |exe: &std::path::Path| std::process::Command::new(exe).args(FALLBACK).spawn().is_ok();
+    match args.map(|a| std::process::Command::new(&exe).args(a).spawn()) {
+        Some(Ok(mut child)) => {
+            std::thread::spawn(move || {
+                if needs_fallback(child.wait().ok().map(|s| s.code())) {
+                    fallback(&exe);
+                }
+            });
+            true
+        }
+        _ => fallback(&exe),
+    }
 }
 
 /// The `zwork.exe` that started this copy: an absolute path to a file named `zwork.exe`.
@@ -174,6 +239,36 @@ mod tests {
             assert!(work_exe(Some(bad.clone())).is_none(), "{bad:?}");
         }
         assert!(work_exe(None).is_none());
+    }
+
+    #[test]
+    fn theo_args_carry_tool_pid_and_a_safe_from() {
+        let args = zwork_args("theo", 4321, &json!({"from": "button", "tab": "Home"})).unwrap();
+        assert_eq!(args, ["theo", "presentaciones", "4321", "button"]);
+        for bad in [json!({}), json!({"from": "a b"}), json!({"from": "x".repeat(40)}), json!({"from": 3})] {
+            assert_eq!(zwork_args("theo", 1, &bad).unwrap()[3], "button", "{bad}");
+        }
+    }
+
+    #[test]
+    fn share_args_carry_dirty_name_and_path_with_empty_for_none() {
+        let saved = json!({"path": r"C:\Users\Ana\Clase.pptx", "dirty": false, "name": "Clase"});
+        assert_eq!(zwork_args("share", 7, &saved).unwrap(), ["compartir", "presentaciones", "7", "0", "Clase", r"C:\Users\Ana\Clase.pptx"]);
+        let unsaved = json!({"path": null, "dirty": true, "name": null});
+        assert_eq!(zwork_args("share", 7, &unsaved).unwrap(), ["compartir", "presentaciones", "7", "1", "", ""]);
+        let long = json!({"name": format!("{}\n", "ñ".repeat(300))});
+        let name = &zwork_args("share", 7, &long).unwrap()[4];
+        assert_eq!(name.chars().count(), NAME_MAX);
+        assert!(!name.contains('\n'));
+        assert!(zwork_args("other", 7, &json!({})).is_none());
+    }
+
+    #[test]
+    fn only_a_clean_exit_skips_the_fallback() {
+        assert!(!needs_fallback(Some(Some(0))));
+        for failed in [Some(Some(1)), Some(None), None] {
+            assert!(needs_fallback(failed), "{failed:?}");
+        }
     }
 
     #[cfg(feature = "zenda")]
