@@ -70,8 +70,11 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         #[cfg(feature = "zenda")]
         {
             if crate::zenda::theo_button(&mut right, crate::i18n::tr("Ask Theo for help"), crate::i18n::tr("Ask Theo about what is on screen")).clicked() {
-                let context = crate::zenda::theo_context(app);
-                crate::zenda::reach_work(app, "work.theo", context);
+                // With Work's chat flag on, the chat opens here instead (zenda_chat.rs).
+                if !crate::zenda_chat::toggle(app) {
+                    let context = crate::zenda::theo_context(app);
+                    crate::zenda::reach_work(app, "work.theo", context);
+                }
             }
             let share = right.add_enabled(has_doc, egui::Button::new(crate::i18n::tr("Share")).corner_radius(control_h / 2.0).min_size(vec2(0.0, control_h)));
             if share.on_hover_text(crate::i18n::tr("Send this presentation with Work")).clicked() {

@@ -36,6 +36,8 @@ impl SlideApp {
         let audio_out = services.audio_out.take();
         SlideApp {
             zenda: Default::default(),
+            #[cfg(feature = "zenda")]
+            theo_chat: None,
             last_fill: serde_json::json!("accent1"),
             last_outline: serde_json::json!("tx1"),
             table_pen: serde_json::json!({"width": 1.0}),
@@ -204,6 +206,8 @@ impl SlideApp {
             log::debug!("ignoring SlideApp::logic for render-only viewport {:?}", ctx.viewport_id());
             return;
         }
+        #[cfg(feature = "zenda")]
+        crate::zenda_chat::tick(self, ctx);
         self.tick_hidden_show(ctx, web_time::Instant::now());
         // `raw_input_hook` runs before `App::logic`. In a full pass egui has already built
         // `PointerState` and `keys_down` from every injected event, so retracting the events after
@@ -312,6 +316,8 @@ impl SlideApp {
         if self.tick_anim_preview(now) {
             ctx.request_repaint();
         }
+        #[cfg(feature = "zenda")]
+        crate::zenda_chat::show(self, ui);
         egui::CentralPanel::default().frame(egui::Frame::NONE.fill(t.chrome)).show(ui, |ui| {
             if self.backstage.is_some() {
                 // File tab: the Backstage view replaces everything below the title bar.
