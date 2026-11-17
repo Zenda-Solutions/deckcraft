@@ -44,7 +44,8 @@ pub fn proof(token: &str, role: Role, client_nonce: &str, server_nonce: &str) ->
         Role::Server => b"deckcraft-control-v1 server",
         Role::Client => b"deckcraft-control-v1 client",
     };
-    let mut mac = <Hmac<Sha256> as Mac>::new_from_slice(token.to_ascii_lowercase().as_bytes()).expect("HMAC takes any key");
+    // HMAC takes a key of any length; an empty proof never matches, so a failure only refuses.
+    let Ok(mut mac) = <Hmac<Sha256> as Mac>::new_from_slice(token.to_ascii_lowercase().as_bytes()) else { return String::new() };
     for part in [label, b"\n", client_nonce.to_ascii_lowercase().as_bytes(), b"\n", server_nonce.to_ascii_lowercase().as_bytes()] {
         mac.update(part);
     }
@@ -129,7 +130,10 @@ mod tests {
         assert!(!reply.to_string().contains(TOKEN));
         // A server proof does not pass as the client's.
         let wrong = proof(TOKEN, Role::Server, &client, &server);
-        assert_eq!(Handshake { challenge: Some((client.clone(), server.clone())) }.reply(json!(2), AUTH, &json!({"proof": wrong}), TOKEN).1, Step::Rejected);
+        assert_eq!(
+            Handshake { challenge: Some((client.clone(), server.clone())) }.reply(json!(2), AUTH, &json!({"proof": wrong}), TOKEN).1,
+            Step::Rejected
+        );
         let right = proof(TOKEN, Role::Client, &client, &server);
         assert_eq!(h.reply(json!(2), AUTH, &json!({"proof": right}), TOKEN).1, Step::Authenticated);
     }
