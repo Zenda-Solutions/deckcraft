@@ -17,6 +17,7 @@
 #[cfg(target_os = "macos")]
 mod apple_events;
 mod audio;
+mod control_auth;
 mod control_server;
 #[cfg(all(unix, not(target_os = "macos")))]
 mod display;
