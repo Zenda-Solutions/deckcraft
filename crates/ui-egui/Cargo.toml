@@ -11,9 +11,12 @@ workspace = true
 [features]
 default = []
 # Zenda's build for Work: Theo and Share buttons and the `work.events` channel.
-zenda = ["dep:image"]
+# Theo's chat inside Presentaciones when Work turns it on (src/zenda_chat.rs).
+zenda = ["dep:image", "dep:zenda-theo"]
 
 [dependencies]
+# Shared with the other Zenda forks; lives in the WordCraft fork for now (egui range 0.36–0.37).
+zenda-theo = { git = "https://github.com/Zenda-Solutions/wordcraft", rev = "5a767b7b9d627cb2db585fe2a5cd2c47d6d80f75", optional = true, features = ["egui", "http"] }
 deckcraft-geom = { workspace = true }
 deckcraft-color = { workspace = true }
 deckcraft-model = { workspace = true }

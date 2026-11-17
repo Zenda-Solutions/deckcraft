@@ -149,6 +149,16 @@ pub fn handle(app: &mut SlideApp, ctx: &egui::Context, req: &ControlRequest) -> 
         }
         "engine.commands" => ok(all_commands(app)),
         "work.events" if crate::zenda::ON => ok(json!({"events": app.zenda.drain()})),
+        // Zenda's build: Work hands Theo's chat a short-lived key (zenda_chat.rs), only over the
+        // channel the app authenticates (`control_auth`).
+        #[cfg(feature = "zenda")]
+        "zenda.chat.key" => match zenda_theo::key_params(p) {
+            Ok((token, secs)) => {
+                crate::zenda_chat::offer_key(app, &token, secs);
+                ok(Value::Null)
+            }
+            Err(e) => err(e),
+        },
         "document.inspect" => wrap(app.run("document.inspect", json!({}))),
         "ui.inspect" => ok(inspect(app, ctx)),
         "ui.pointer" => {

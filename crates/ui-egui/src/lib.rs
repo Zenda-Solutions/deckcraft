@@ -29,6 +29,8 @@ pub mod toast;
 pub mod uifonts;
 pub mod widgets;
 pub mod zenda;
+#[cfg(feature = "zenda")]
+pub mod zenda_chat;
 
 use std::collections::HashMap;
 use std::sync::mpsc::Receiver;
@@ -203,6 +205,9 @@ struct InputTarget {
 pub struct SlideApp {
     /// Events for Work (`work.events`); empty unless built with the `zenda` feature.
     pub zenda: zenda::Outbox,
+    /// Theo's chat inside Presentaciones: `None` until Work sends a chat key (its flag is on).
+    #[cfg(feature = "zenda")]
+    pub theo_chat: Option<zenda_theo::panel::Chat>,
     /// Shape Fill's last colour (a command colour parameter): the button applies it again. Accent 1 until one is picked.
     pub last_fill: serde_json::Value,
     /// Shape Outline's last colour, likewise. Text 1 until one is picked.
