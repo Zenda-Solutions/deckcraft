@@ -297,3 +297,26 @@ fn a_request_already_started_when_the_reply_times_out_reports_an_unknown_outcome
     assert!(v["error"].as_str().unwrap().contains("outcome is unknown"), "{v}");
     ui.join().unwrap();
 }
+
+/// With a token, nothing is dispatched before `auth`: a request first gets "authentication required" and
+/// the connection closes; after `auth {token}` requests go through, and a second `auth` is refused.
+#[test]
+fn with_a_token_every_connection_authenticates_first() {
+    const TOKEN: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+    let l = TcpListener::bind("127.0.0.1:0").unwrap();
+    let addr = l.local_addr().unwrap();
+    let rx = serve_listener_auth(l, Limits { max_line: 512, ..small() }, egui::Context::default(), Some(TOKEN.into()));
+    ui(rx);
+    let (mut r, mut w) = client(addr);
+    writeln!(w, r#"{{"id":1,"method":"zenda.chat.key","params":{{"llave":"zck_a","venceEn":3600}}}}"#).unwrap();
+    let got = replies_until_closed(&mut r);
+    assert_eq!(got.len(), 1);
+    assert_eq!(got[0]["error"], "authentication required");
+    let (mut r, mut w) = client(addr);
+    writeln!(w, "{}", json!({"id": 2, "method": "auth", "params": {"token": TOKEN}})).unwrap();
+    assert_eq!(reply(&mut r).unwrap()["result"]["authenticated"], true);
+    writeln!(w, r#"{{"id":3,"method":"ui.inspect"}}"#).unwrap();
+    assert_eq!(reply(&mut r).unwrap()["result"], "ui.inspect");
+    writeln!(w, "{}", json!({"id": 4, "method": "auth", "params": {"token": TOKEN}})).unwrap();
+    assert_eq!(reply(&mut r).unwrap()["error"], "already authenticated");
+}

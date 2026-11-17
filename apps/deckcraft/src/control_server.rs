@@ -49,10 +49,16 @@ impl Default for Limits {
 }
 
 pub fn start(port: u16, ctx: egui::Context) -> Receiver<ControlRequest> {
+    let token = crate::control_auth::token_from_env();
+    // Zenda's build never listens unauthenticated: Theo's chat keys travel over this channel.
+    if token.is_none() && cfg!(feature = "zenda") {
+        log::error!("control server not started: Zenda's build needs {} (64 hex)", crate::control_auth::TOKEN_VAR);
+        return sync_channel::<ControlRequest>(0).1;
+    }
     match TcpListener::bind(("127.0.0.1", port)) {
         Ok(l) => {
             log::info!("control server listening on 127.0.0.1:{port}");
-            serve_listener(l, Limits::default(), ctx)
+            serve_listener_auth(l, Limits::default(), ctx, token)
         }
         Err(e) => {
             log::error!("control server failed to bind 127.0.0.1:{port}: {e}");
@@ -79,7 +85,14 @@ fn accepted<T>(incoming: impl Iterator<Item = std::io::Result<T>>, mut wait: imp
 }
 
 /// Accept connections on `listener` under `limits`; requests arrive on the returned receiver.
+#[cfg(test)]
 fn serve_listener(listener: TcpListener, limits: Limits, ctx: egui::Context) -> Receiver<ControlRequest> {
+    serve_listener_auth(listener, limits, ctx, None)
+}
+
+/// [`serve_listener`] where, with a `token`, every connection must authenticate first (`control_auth`).
+fn serve_listener_auth(listener: TcpListener, limits: Limits, ctx: egui::Context, token: Option<String>) -> Receiver<ControlRequest> {
+    let token = token.map(Arc::new);
     let (tx, rx) = sync_channel::<ControlRequest>(limits.queue.max(1));
     let active = Arc::new(AtomicUsize::new(0));
     let refusing = Arc::new(AtomicUsize::new(0));
@@ -95,9 +108,10 @@ fn serve_listener(listener: TcpListener, limits: Limits, ctx: egui::Context) -> 
             let slot = Slot(Arc::clone(&active));
             let tx = tx.clone();
             let ctx = ctx.clone();
+            let token = token.clone();
             let spawned = std::thread::Builder::new().name("control-client".into()).spawn(move || {
                 let _slot = slot;
-                serve(stream, &tx, &ctx, limits);
+                serve(stream, &tx, &ctx, limits, token.as_deref().map(String::as_str));
             });
             if spawned.is_err() {
                 log::warn!("control server could not start a client thread");
@@ -241,13 +255,15 @@ fn close_politely(out: &TcpStream, reader: &mut BufReader<TcpStream>, grace: Dur
     }
 }
 
-fn serve(stream: TcpStream, tx: &SyncSender<ControlRequest>, ctx: &egui::Context, limits: Limits) {
+fn serve(stream: TcpStream, tx: &SyncSender<ControlRequest>, ctx: &egui::Context, limits: Limits, token: Option<&str>) {
     if stream.set_read_timeout(Some(limits.idle_timeout)).is_err() || stream.set_write_timeout(Some(limits.write_timeout)).is_err() {
         return;
     }
     let Ok(read) = stream.try_clone() else { return };
     let mut out = stream;
     let mut reader = BufReader::new(read);
+    let mut handshake = crate::control_auth::Handshake::default();
+    let mut authenticated = token.is_none();
     loop {
         let line = match read_line(&mut reader, limits.max_line) {
             Line::Text(t) => t,
@@ -267,6 +283,22 @@ fn serve(stream: TcpStream, tx: &SyncSender<ControlRequest>, ctx: &egui::Context
                 let _ = writeln!(out, "{}", json!({"ok": false, "error": e}));
                 close_politely(&out, &mut reader, limits.write_timeout);
                 break;
+            }
+            Parsed::Request { id, method, params } if !authenticated => {
+                let (reply, step) = handshake.reply(id, &method, &params, token.unwrap_or_default());
+                let _ = writeln!(out, "{reply}");
+                match step {
+                    crate::control_auth::Step::Authenticated => authenticated = true,
+                    crate::control_auth::Step::Challenged => {}
+                    crate::control_auth::Step::Rejected => {
+                        close_politely(&out, &mut reader, limits.write_timeout);
+                        break;
+                    }
+                }
+                continue;
+            }
+            Parsed::Request { id, method, .. } if token.is_some() && matches!(method.as_str(), crate::control_auth::AUTH | crate::control_auth::CHALLENGE) => {
+                json!({"id": id, "ok": false, "error": "already authenticated"})
             }
             Parsed::Request { id, method, params } => {
                 let (req, rrx) = ControlRequest::new(method, params);
