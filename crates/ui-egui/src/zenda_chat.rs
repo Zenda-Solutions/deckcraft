@@ -79,7 +79,7 @@ impl Host for PresentacionesHost<'_> {
         (name == DO).then(|| args["command"].as_str().and_then(|id| POLICY.question(id))).flatten()
     }
 
-    fn target(&self, _name: &str, _args: &Value) -> Option<egui::Rect> {
+    fn target(&mut self, _name: &str, _args: &Value) -> Option<egui::Rect> {
         None
     }
 }

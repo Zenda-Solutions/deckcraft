@@ -16,7 +16,7 @@ zenda = ["dep:image", "dep:zenda-theo"]
 
 [dependencies]
 # Shared with the other Zenda forks; lives in the WordCraft fork for now (egui range 0.36–0.37).
-zenda-theo = { git = "https://github.com/Zenda-Solutions/wordcraft", rev = "5a767b7b9d627cb2db585fe2a5cd2c47d6d80f75", optional = true, features = ["egui", "http"] }
+zenda-theo = { git = "https://github.com/Zenda-Solutions/wordcraft", rev = "6161a87031d7642caafabdab663a0b71ad6735d1", optional = true, features = ["egui", "http"] }
 deckcraft-geom = { workspace = true }
 deckcraft-color = { workspace = true }
 deckcraft-model = { workspace = true }
