@@ -61,6 +61,14 @@ pub struct PresentacionesHost<'a> {
 }
 
 impl Host for PresentacionesHost<'_> {
+    fn suggestions(&self) -> Vec<String> {
+        vec![
+            "Armame una portada con el título «El agua»".into(),
+            "Agregá una diapositiva con tres puntos clave".into(),
+            "¿Cómo cambio el tema de la presentación?".into(),
+        ]
+    }
+
     fn skill(&self) -> String {
         SKILL.to_string()
     }
