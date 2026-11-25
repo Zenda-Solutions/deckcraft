@@ -54,7 +54,11 @@ pub(super) const CATALOG: &[(&str, &str, &str)] = &[
     ("Duplicate Selected Slides", "Duplicar diapositivas seleccionadas", "Duplicar Slides Selecionados"),
     ("Slides from Outline…", "Diapositivas del esquema…", "Slides da Estrutura de Tópicos…"),
     ("Reuse Slides…", "Reutilizar diapositivas…", "Reutilizar Slides…"),
-    ("Reuse Slides (Keep Source Formatting)…", "Reutilizar diapositivas (mantener formato de origen)…", "Reutilizar Slides (Manter Formatação Original)…"),
+    (
+        "Reuse Slides (Keep Source Formatting)…",
+        "Reutilizar diapositivas (mantener formato de origen)…",
+        "Reutilizar Slides (Manter Formatação Original)…",
+    ),
     ("Layout", "Disposición", "Layout"),
     ("Reset", "Restablecer", "Redefinir"),
     ("Section", "Sección", "Seção"),
@@ -282,7 +286,11 @@ pub(super) const CATALOG: &[(&str, &str, &str)] = &[
     ("Customize Quick Access Toolbar", "Personalizar barra de herramientas de acceso rápido", "Personalizar Barra de Ferramentas de Acesso Rápido"),
     ("Add to Quick Access Toolbar", "Agregar a la barra de herramientas de acceso rápido", "Adicionar à Barra de Ferramentas de Acesso Rápido"),
     ("Remove from Quick Access Toolbar", "Quitar de la barra de herramientas de acceso rápido", "Remover da Barra de Ferramentas de Acesso Rápido"),
-    ("Right-click any ribbon button to add it.", "Hacé clic derecho en un botón de la cinta para agregarlo.", "Clique com o botão direito em um botão da faixa para adicioná-lo."),
+    (
+        "Right-click any ribbon button to add it.",
+        "Hacé clic derecho en un botón de la cinta para agregarlo.",
+        "Clique com o botão direito em um botão da faixa para adicioná-lo.",
+    ),
     ("Reset to Defaults", "Restablecer valores predeterminados", "Restaurar Padrões"),
     // About (Zenda build).
     ("About", "Acerca de", "Sobre"),

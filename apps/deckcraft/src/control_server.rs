@@ -297,7 +297,9 @@ fn serve(stream: TcpStream, tx: &SyncSender<ControlRequest>, ctx: &egui::Context
                 }
                 continue;
             }
-            Parsed::Request { id, method, .. } if token.is_some() && matches!(method.as_str(), crate::control_auth::AUTH | crate::control_auth::CHALLENGE) => {
+            Parsed::Request { id, method, .. }
+                if token.is_some() && matches!(method.as_str(), crate::control_auth::AUTH | crate::control_auth::CHALLENGE) =>
+            {
                 json!({"id": id, "ok": false, "error": "already authenticated"})
             }
             Parsed::Request { id, method, params } => {

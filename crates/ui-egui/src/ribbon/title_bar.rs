@@ -60,7 +60,10 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         // Right side.
         let mut right = ui.new_child(
             egui::UiBuilder::new()
-                .max_rect(Rect::from_min_max(pos2(rect.max.x - if crate::zenda::ON { 480.0 } else { 320.0 }, rect.min.y), pos2(rect.max.x - 10.0, rect.max.y)))
+                .max_rect(Rect::from_min_max(
+                    pos2(rect.max.x - if crate::zenda::ON { 480.0 } else { 320.0 }, rect.min.y),
+                    pos2(rect.max.x - 10.0, rect.max.y),
+                ))
                 .layout(egui::Layout::right_to_left(egui::Align::Center)),
         );
         right.spacing_mut().item_spacing.x = 6.0;
@@ -69,14 +72,17 @@ pub fn title_bar(app: &mut SlideApp, ui: &mut Ui) {
         }
         #[cfg(feature = "zenda")]
         {
-            if crate::zenda::theo_button(&mut right, crate::i18n::tr("Ask Theo for help"), crate::i18n::tr("Ask Theo about what is on screen")).clicked() {
+            if crate::zenda::theo_button(&mut right, crate::i18n::tr("Ask Theo for help"), crate::i18n::tr("Ask Theo about what is on screen"))
+                .clicked()
+            {
                 // With Work's chat flag on, the chat opens here instead (zenda_chat.rs).
                 if !crate::zenda_chat::toggle(app) {
                     let context = crate::zenda::theo_context(app);
                     crate::zenda::reach_work(app, "work.theo", context);
                 }
             }
-            let share = right.add_enabled(has_doc, egui::Button::new(crate::i18n::tr("Share")).corner_radius(control_h / 2.0).min_size(vec2(0.0, control_h)));
+            let share =
+                right.add_enabled(has_doc, egui::Button::new(crate::i18n::tr("Share")).corner_radius(control_h / 2.0).min_size(vec2(0.0, control_h)));
             if share.on_hover_text(crate::i18n::tr("Send this presentation with Work")).clicked() {
                 let _ = app.run("file.share", json!({}));
             }

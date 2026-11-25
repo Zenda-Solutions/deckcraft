@@ -199,12 +199,7 @@ mod tests {
         let mut app = app();
         app.zenda.push("work.theo", theo_context(&app));
         let (reply, _rx) = std::sync::mpsc::channel();
-        let req = crate::control::ControlRequest {
-            method: "work.events".into(),
-            params: json!({}),
-            reply,
-            state: Default::default(),
-        };
+        let req = crate::control::ControlRequest { method: "work.events".into(), params: json!({}), reply, state: Default::default() };
         let crate::control::Outcome::Done(reply) = crate::control::handle(&mut app, &egui::Context::default(), &req) else {
             panic!("immediate response")
         };
@@ -275,8 +270,7 @@ mod tests {
     #[test]
     fn theo_button_has_mascot_orange_and_accessible_names() {
         use egui_kittest::kittest::Queryable;
-        for (language, label) in
-            [(Language::En, "Ask Theo for help"), (Language::Es, "Pedile ayuda a Theo"), (Language::PtBr, "Peça ajuda ao Theo")]
+        for (language, label) in [(Language::En, "Ask Theo for help"), (Language::Es, "Pedile ayuda a Theo"), (Language::PtBr, "Peça ajuda ao Theo")]
         {
             let mut h = egui_kittest::Harness::builder().build_ui_state(
                 |ui, count: &mut usize| {
