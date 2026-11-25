@@ -15,6 +15,11 @@ pub(super) const CATALOG: &[(&str, &str, &str)] = &[
     ("Light/Dark appearance", "Apariencia clara u oscura", "Aparência clara ou escura"),
     ("Window title bar", "Barra de título de la ventana", "Barra de título da janela"),
     ("Options", "Opciones", "Opções"),
+    ("Info", "Información", "Informações"),
+    ("Save As", "Guardar como", "Salvar como"),
+    ("Account", "Cuenta", "Conta"),
+    ("Close", "Cerrar", "Fechar"),
+    ("More themes", "Más temas", "Mais temas"),
     // Tabs.
     ("File", "Archivo", "Arquivo"),
     ("File (Alt+F)", "Archivo (Alt+F)", "Arquivo (Alt+F)"),

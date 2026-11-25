@@ -10,7 +10,7 @@ use super::{
 fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let (main, arrow) = big_button_ex(ui, Icon::Paste, "Paste", enabled(app, "edit.paste"), true, false);
-        if main.on_hover_text(crate::i18n::tr("Paste (⌘V)")).clicked() {
+        if main.on_hover_text(crate::i18n::keys(crate::i18n::tr("Paste (⌘V)"))).clicked() {
             run(app, "edit.paste", json!({}));
         }
         if let Some(a) = arrow {
@@ -100,7 +100,7 @@ pub(super) fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
 fn slides_group(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let (main, arrow) = big_button_ex(ui, Icon::NewSlide, "New\nSlide", enabled(app, "slide.new"), true, false);
-        if main.on_hover_text(crate::i18n::tr("New Slide (⇧⌘N)")).clicked() {
+        if main.on_hover_text(crate::i18n::keys(crate::i18n::tr("New Slide (⇧⌘N)"))).clicked() {
             run(app, "slide.new", json!({}));
         }
         if let Some(a) = arrow {

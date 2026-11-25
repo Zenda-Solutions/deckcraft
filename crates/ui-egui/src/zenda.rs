@@ -331,6 +331,10 @@ mod tests {
             for name in [home, new_slide, layout, insert] {
                 assert!(h.query_all_by_label(name).next().is_some(), "{}: {name}", language.code());
             }
+            if language == Language::Es && !cfg!(target_os = "macos") {
+                // Zenda's E2E of Work 0.2.30: the search button read «(⇧⌘P)», a Mac shortcut, on Windows.
+                assert!(h.query_all_by_label("Buscar comandos (Ctrl+Shift+P)").next().is_some(), "es: Windows keys");
+            }
             if ON {
                 assert!(h.query_all_by_label(language.tr("Ask Theo for help")).next().is_some(), "{}: Theo", language.code());
                 assert!(h.query_all_by_label(language.tr("Share")).next().is_some(), "{}: Share", language.code());

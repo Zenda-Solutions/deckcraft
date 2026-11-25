@@ -124,6 +124,15 @@ pub fn tr(text: &str) -> &str {
     current().tr(text)
 }
 
+/// `text` with its shortcuts written for this platform: «⇧⌘P» is Mac only, Windows reads «Ctrl+Shift+P»
+/// (Zenda's E2E of Work 0.2.30 heard the Mac keys on Windows).
+pub fn keys(text: &str) -> std::borrow::Cow<'_, str> {
+    if cfg!(target_os = "macos") || !text.contains('⌘') {
+        return text.into();
+    }
+    text.replace("⇧⌘", "Ctrl+Shift+").replace("⌥⌘", "Ctrl+Alt+").replace('⌘', "Ctrl+").into()
+}
+
 /// The accessible name of a split control's dropdown half («Bullets options»).
 pub fn options_of(name: &str) -> String {
     match current() {
