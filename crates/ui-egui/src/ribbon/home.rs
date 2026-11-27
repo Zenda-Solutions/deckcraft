@@ -10,7 +10,7 @@ use super::{
 fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let (main, arrow) = big_button_ex(ui, Icon::Paste, "Paste", enabled(app, "edit.paste"), true, false);
-        if main.on_hover_text(crate::i18n::tr("Paste (⌘V)")).clicked() {
+        if main.on_hover_text(crate::i18n::keys(crate::i18n::tr("Paste (⌘V)"))).clicked() {
             run(app, "edit.paste", json!({}));
         }
         if let Some(a) = arrow {
@@ -34,7 +34,8 @@ fn clipboard_group(app: &mut SlideApp, ui: &mut Ui) {
             small(app, ui, Icon::Copy, "Copy", "edit.copy", json!({}));
             let on = app.session.painter.is_some();
             let en = enabled(app, "format.painter");
-            let r = small_button(ui, Icon::FormatPainter, "Format", en, on).on_hover_text(crate::i18n::tr("Format Painter (double-click to keep it on)"));
+            let r =
+                small_button(ui, Icon::FormatPainter, "Format", en, on).on_hover_text(crate::i18n::tr("Format Painter (double-click to keep it on)"));
             if r.double_clicked() {
                 run(app, "format.painter", json!({"sticky": true}));
             } else if r.clicked() {
@@ -100,7 +101,7 @@ pub(super) fn layout_menu(app: &mut SlideApp, ui: &mut Ui, cmd: &str) {
 fn slides_group(app: &mut SlideApp, ui: &mut Ui) {
     group(ui, |ui| {
         let (main, arrow) = big_button_ex(ui, Icon::NewSlide, "New\nSlide", enabled(app, "slide.new"), true, false);
-        if main.on_hover_text(crate::i18n::tr("New Slide (⇧⌘N)")).clicked() {
+        if main.on_hover_text(crate::i18n::keys(crate::i18n::tr("New Slide (⇧⌘N)"))).clicked() {
             run(app, "slide.new", json!({}));
         }
         if let Some(a) = arrow {
@@ -386,7 +387,11 @@ fn paragraph_group(app: &mut SlideApp, ui: &mut Ui, st: &Value) {
                 });
                 let r = icon_toggle(ui, Icon::SmartArt, "Convert to SmartArt", enabled(app, "smartArt.fromText"), false);
                 egui::Popup::menu(&r).show(|ui| smartart_gallery(app, ui, "smartArt.fromText", json!({}), "", ("", ""), None));
-                if ui.add_enabled(en, egui::Button::new("Paragraph…").min_size(vec2(88.0, 22.0))).on_hover_text(crate::i18n::tr("Paragraph")).clicked() {
+                if ui
+                    .add_enabled(en, egui::Button::new("Paragraph…").min_size(vec2(88.0, 22.0)))
+                    .on_hover_text(crate::i18n::tr("Paragraph"))
+                    .clicked()
+                {
                     run(app, "format.paragraphDialog", json!({}));
                 }
             });

@@ -199,12 +199,7 @@ mod tests {
         let mut app = app();
         app.zenda.push("work.theo", theo_context(&app));
         let (reply, _rx) = std::sync::mpsc::channel();
-        let req = crate::control::ControlRequest {
-            method: "work.events".into(),
-            params: json!({}),
-            reply,
-            state: Default::default(),
-        };
+        let req = crate::control::ControlRequest { method: "work.events".into(), params: json!({}), reply, state: Default::default() };
         let crate::control::Outcome::Done(reply) = crate::control::handle(&mut app, &egui::Context::default(), &req) else {
             panic!("immediate response")
         };
@@ -275,8 +270,7 @@ mod tests {
     #[test]
     fn theo_button_has_mascot_orange_and_accessible_names() {
         use egui_kittest::kittest::Queryable;
-        for (language, label) in
-            [(Language::En, "Ask Theo for help"), (Language::Es, "Pedile ayuda a Theo"), (Language::PtBr, "Peça ajuda ao Theo")]
+        for (language, label) in [(Language::En, "Ask Theo for help"), (Language::Es, "Pedile ayuda a Theo"), (Language::PtBr, "Peça ajuda ao Theo")]
         {
             let mut h = egui_kittest::Harness::builder().build_ui_state(
                 |ui, count: &mut usize| {
@@ -330,6 +324,10 @@ mod tests {
             h.run_steps(4);
             for name in [home, new_slide, layout, insert] {
                 assert!(h.query_all_by_label(name).next().is_some(), "{}: {name}", language.code());
+            }
+            if language == Language::Es && !cfg!(target_os = "macos") {
+                // Zenda's E2E of Work 0.2.30: the search button read «(⇧⌘P)», a Mac shortcut, on Windows.
+                assert!(h.query_all_by_label("Buscar comandos (Ctrl+Shift+P)").next().is_some(), "es: Windows keys");
             }
             if ON {
                 assert!(h.query_all_by_label(language.tr("Ask Theo for help")).next().is_some(), "{}: Theo", language.code());
